@@ -5,8 +5,9 @@ compression algorithm for time-series data.
 
 Basic usage:
 
-```
+```rs
 use gortsz::*;
+use gortsz::stats::*;
 
 fn main() {
     let data = [
@@ -18,11 +19,17 @@ fn main() {
     ];
 
     let buf = [0u8; 256];
-    let compressed = compress::<{ COLUMNS - 1 }, 3, WhitepaperOptions>(
+    let compressed = match compress::<3, 3, WhitepaperOptions>(
         timeseries.iter(),
         buf.view_bits_mut(),
-    )
-    .expect("Compression failed: Not enough space in buffer");
+    ) {
+        Ok(compressed) => compressed,
+        Err(CompressError {
+            valid_bits, ..
+        }) => {
+            valid_bits // Buffer too small, only partly compressed
+        }
+    };
 
     for result in decompressor {
         match result {
