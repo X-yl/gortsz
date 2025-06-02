@@ -1,5 +1,11 @@
 [package]
 name = "gortsz"
+description = "A rust #![no_std] time series compressor based on the Gorilla whitepaper."
+license = "MIT OR Apache-2.0"
+keywords = ["embedded", "compression", "time-series"]
+categories = ["compression"]
+homepage = "https://strathseds.org"
+repository = "https://github.com/X-yl/gortsz"
 version = "0.1.0"
 edition = "2024"
 
