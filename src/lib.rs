@@ -147,7 +147,7 @@ pub fn compress_with_stats<
             .zip(previous_data.iter_mut())
             .zip(previous_xors.iter_mut())
         {
-            let xor = d.to_bits() ^ previous_d.to_bits();
+            let mut xor = d.to_bits() ^ previous_d.to_bits();
 
             if xor == 0 {
                 // No change, write a zero bit
@@ -184,6 +184,8 @@ pub fn compress_with_stats<
                     let bit = *bit;
                     write_bit!(bit);
                 }
+
+                xor = *previous_xor;
             } else {
                 let leading_zeros = leading_zeros.min(0b1111);
 
@@ -398,7 +400,7 @@ impl<'a, const SAMPLES_PER_ROW: usize, const BC: usize, OPTS: CompressionOptions
 
                     let xor = compressed.load_le::<u32>() << previous_xor.trailing_zeros();
                     *previous_d = f32::from_bits(xor ^ previous_d.to_bits());
-                    *previous_xor = xor;
+                    // don't update previous_xor, as it is still valid
                 } else {
                     let leading_zero_bits = if let Some(x) = consume(&mut self.index, 4) {
                         x.load_le::<u32>()
