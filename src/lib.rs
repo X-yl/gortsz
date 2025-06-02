@@ -481,7 +481,7 @@ mod tests {
         let compressed = match compress_with_stats::<{ COLUMNS - 1 }, 3, WhitepaperOptions>(
             timeseries.iter(),
             buf.view_bits_mut(),
-            &mut stats
+            &mut stats,
         ) {
             Ok(compressed) => compressed,
             Err(CompressError {
@@ -521,6 +521,5 @@ mod tests {
         );
 
         println!("Stats: {stats:#?}");
-        
     }
 }

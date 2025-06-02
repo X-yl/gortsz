@@ -21,7 +21,7 @@ pub mod whitepaper {
 pub enum XorCtl {
     Z,
     OZ,
-    OO
+    OO,
 }
 
 pub trait CompressionStatsExt<const N: usize, OPTS: CompressionOptions<N>> {
@@ -29,7 +29,7 @@ pub trait CompressionStatsExt<const N: usize, OPTS: CompressionOptions<N>> {
     fn increment_repeated_count(&mut self);
     fn increment_overflow_count(&mut self);
 
-    fn increment_data_xor_ctl(&mut self, xor_ctl: XorCtl); 
+    fn increment_data_xor_ctl(&mut self, xor_ctl: XorCtl);
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -65,8 +65,7 @@ impl<const N: usize, OPTS: CompressionOptions<N>> CompressionStatsExt<N, OPTS>
 
     fn increment_overflow_count(&mut self) {}
 
-    fn increment_data_xor_ctl(&mut self, xor_ctl: XorCtl) {
-    }
+    fn increment_data_xor_ctl(&mut self, _xor_ctl: XorCtl) {}
 }
 
 impl<const N: usize, OPTS: CompressionOptions<N>> CompressionStats<N, OPTS> {
