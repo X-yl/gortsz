@@ -151,6 +151,7 @@ pub fn compress_with_stats<
 
             if xor == 0 {
                 // No change, write a zero bit
+                stats.increment_data_xor_ctl(stats::XorCtl::Z);
                 write_bits!(bits![u8, Lsb0; 0]);
                 *previous_xor = 0;
                 continue;
@@ -185,6 +186,7 @@ pub fn compress_with_stats<
                     write_bit!(bit);
                 }
 
+                stats.increment_data_xor_ctl(stats::XorCtl::OZ);
                 xor = *previous_xor;
             } else {
                 let leading_zeros = leading_zeros.min(0b1111);
@@ -211,6 +213,7 @@ pub fn compress_with_stats<
 
             *previous_d = d;
             *previous_xor = xor;
+            stats.increment_data_xor_ctl(stats::XorCtl::OO);
         }
 
         last_valid_index.set(index);
@@ -472,11 +475,13 @@ mod tests {
             })
             .collect();
 
-        let mut buf = [0u8; 250];
+        let mut buf = [0u8; 100 * 1024];
         let mut entries_processed = timeseries.len();
-        let compressed = match compress::<{ COLUMNS - 1 }, 3, WhitepaperOptions>(
+        let mut stats = CompressionStats::new();
+        let compressed = match compress_with_stats::<{ COLUMNS - 1 }, 3, WhitepaperOptions>(
             timeseries.iter(),
             buf.view_bits_mut(),
+            &mut stats
         ) {
             Ok(compressed) => compressed,
             Err(CompressError {
@@ -514,5 +519,8 @@ mod tests {
             data_size_bytes,
             compressed_size_bits as f64 / 8. * 100.0 / data_size_bytes as f64
         );
+
+        println!("Stats: {stats:#?}");
+        
     }
 }

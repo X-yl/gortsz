@@ -22,7 +22,6 @@ pub enum XorCtl {
     Z,
     OZ,
     OO
-    
 }
 
 pub trait CompressionStatsExt<const N: usize, OPTS: CompressionOptions<N>> {
@@ -30,15 +29,19 @@ pub trait CompressionStatsExt<const N: usize, OPTS: CompressionOptions<N>> {
     fn increment_repeated_count(&mut self);
     fn increment_overflow_count(&mut self);
 
-    // XOR 
-    fn increment_xor_ctl(&mut self, xor_ctl: u8); 
+    fn increment_data_xor_ctl(&mut self, xor_ctl: XorCtl); 
 }
 
 #[derive(Debug, Clone, Copy)]
 pub struct CompressionStats<const N: usize, OPTS: CompressionOptions<N>> {
     pub timestamp_delta_bin_distribution: [u64; N],
-    pub repeated_count: u64,
-    pub overflow_count: u64,
+    pub repeated_time_count: u64,
+    pub overflow_time_count: u64,
+
+    pub xor_ctl0_count: u64,
+    pub xor_ctl10_count: u64,
+    pub xor_ctl11_count: u64,
+
     _options: core::marker::PhantomData<OPTS>,
 }
 
@@ -62,7 +65,7 @@ impl<const N: usize, OPTS: CompressionOptions<N>> CompressionStatsExt<N, OPTS>
 
     fn increment_overflow_count(&mut self) {}
 
-    fn increment_xor_ctl(&mut self, _xor_ctl: u8) {
+    fn increment_data_xor_ctl(&mut self, xor_ctl: XorCtl) {
     }
 }
 
@@ -70,8 +73,13 @@ impl<const N: usize, OPTS: CompressionOptions<N>> CompressionStats<N, OPTS> {
     pub fn new() -> Self {
         Self {
             timestamp_delta_bin_distribution: [0; N],
-            repeated_count: 0,
-            overflow_count: 0,
+            repeated_time_count: 0,
+            overflow_time_count: 0,
+
+            xor_ctl0_count: 0,
+            xor_ctl10_count: 0,
+            xor_ctl11_count: 0,
+
             _options: core::marker::PhantomData,
         }
     }
@@ -81,11 +89,11 @@ impl<const N: usize, OPTS: CompressionOptions<N>> CompressionStatsExt<N, OPTS>
     for CompressionStats<N, OPTS>
 {
     fn increment_repeated_count(&mut self) {
-        self.repeated_count += 1;
+        self.repeated_time_count += 1;
     }
 
     fn increment_overflow_count(&mut self) {
-        self.overflow_count += 1;
+        self.overflow_time_count += 1;
     }
 
     fn increment_bin(&mut self, bin: usize) {
@@ -93,7 +101,11 @@ impl<const N: usize, OPTS: CompressionOptions<N>> CompressionStatsExt<N, OPTS>
             self.timestamp_delta_bin_distribution[bin].saturating_add(1);
     }
 
-    fn increment_xor_ctl(&mut self, xor_ctl: u8) {
-        
+    fn increment_data_xor_ctl(&mut self, xor_ctl: XorCtl) {
+        match xor_ctl {
+            XorCtl::Z => self.xor_ctl0_count += 1,
+            XorCtl::OZ => self.xor_ctl10_count += 1,
+            XorCtl::OO => self.xor_ctl11_count += 1,
+        }
     }
 }
