@@ -6,11 +6,15 @@ keywords = ["embedded", "compression", "time-series"]
 categories = ["compression"]
 homepage = "https://strathseds.org"
 repository = "https://github.com/X-yl/gortsz"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2024"
 
+[features]
+default = ["serde"]
+serde = ["bitvec/serde"]
+
 [dependencies]
-bitvec = { version="1.0.1", default-features=false, features=[] }
+bitvec = { version="1.0.1", default-features=false  }
 heapless = "0.8.0"
 
 [dev-dependencies]
