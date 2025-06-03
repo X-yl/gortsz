@@ -32,8 +32,8 @@ pub struct CompressError<'a> {
     pub entries_processed: usize,
 }
 
-pub fn compress<'a, 'b, const N: usize, const BC: usize, OPTS: CompressionOptions<BC>>(
-    series: impl IntoIterator<Item = &'a (u32, [f32; N])>,
+pub fn compress<'b, const N: usize, const BC: usize, OPTS: CompressionOptions<BC>>(
+    series: impl IntoIterator<Item = (u32, [f32; N])>,
     buf: &'b mut BitSlice<u8>,
 ) -> Result<&'b BitSlice<u8>, CompressError<'b>> {
     compress_with_stats(series, buf, &mut NoStats::<BC, OPTS>::new())
@@ -41,13 +41,12 @@ pub fn compress<'a, 'b, const N: usize, const BC: usize, OPTS: CompressionOption
 /// Facebook's Gorilla compression algorithm for time series data.
 /// The timestamps are delta-to-delta encoded and the data is XOR encoded.
 pub fn compress_with_stats<
-    'a,
     'b,
     const N: usize,
     const BC: usize,
     OPTS: CompressionOptions<BC>,
 >(
-    series: impl IntoIterator<Item = &'a (u32, [f32; N])>,
+    series: impl IntoIterator<Item = (u32, [f32; N])>,
     buf: &'b mut BitSlice<u8>,
     stats: &mut impl CompressionStatsExt<BC, OPTS>,
 ) -> Result<&'b BitSlice<u8>, CompressError<'b>> {
@@ -81,7 +80,7 @@ pub fn compress_with_stats<
     }
 
     let (mut previous_time, mut previous_data) =
-        *series.next().expect("Time series must not be empty");
+        series.next().expect("Time series must not be empty");
     let mut previous_delta = 0i32;
     let mut previous_xors = [0u32; N];
 
@@ -90,7 +89,7 @@ pub fn compress_with_stats<
         write_bits_!(BitSlice::<u8, Lsb0>::from_slice(&bytes), 0);
     }
 
-    for (row_index, &(time, ref data)) in series.enumerate() {
+    for (row_index, (time, ref data)) in series.enumerate() {
         macro_rules! write_bit {
             ($b:expr) => {
                 write_bit_!($b, row_index);
