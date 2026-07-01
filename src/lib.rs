@@ -389,6 +389,10 @@ impl<'a, const SAMPLES_PER_ROW: usize, const BC: usize, OPTS: CompressionOptions
                 };
 
                 if xor_ctl_bit.not() {
+                    if previous_xor == &0 {
+                        self.failed = true;
+                        return Some(Err(DecompressError::CorruptedData { index: self.index }));
+                    }
                     // The new data is fully contained within the previous data's leading and trailing zeros
                     let n_bits_to_read =
                         (32 - previous_xor.leading_zeros() - previous_xor.trailing_zeros())
